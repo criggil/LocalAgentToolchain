@@ -69,17 +69,39 @@ Traditional agent frameworks attempt this with heavy Python runtimes, bloated ve
 
 ---
 
-## 🚀 Quick Start
+## 📥 Installation
 
-### 1. Build
+### Method 1: One-Line Installer (macOS & Linux)
+Install or update the latest pre-compiled release (Apple Silicon M1/M2/M3/M4, Intel, or Linux):
+
 ```bash
-cargo build --release
+curl -fsSL https://raw.githubusercontent.com/criggil/LocalAgentToolchain/main/install.sh | bash
 ```
-Binaries will be placed in `./target/release/` (`task`, `note`, `skill`). You can symlink or copy them into your `$PATH` (e.g. `~/.local/bin/` or `/usr/local/bin/`).
+
+This installs `task`, `note`, and `skill` into `~/.local/bin/`.
+
+Ensure `~/.local/bin` is in your `$PATH` (add to your `~/.zshrc` or `~/.bashrc` if needed):
+```bash
+export PATH="$HOME/.local/bin:$PATH"
+```
 
 ---
 
-### 2. Task Manager (`task`)
+### Method 2: Build from Source
+If you have the Rust toolchain installed:
+
+```bash
+git clone https://github.com/criggil/LocalAgentToolchain.git
+cd LocalAgentToolchain
+cargo build --release
+```
+Compiled binaries will be available in `./target/release/` (`task`, `note`, `skill`).
+
+---
+
+## 🚀 Quick Start
+
+### 1. Task Manager (`task`)
 
 ```bash
 # Initialize task tracking (embedded in repo):
@@ -106,7 +128,7 @@ task done task-001
 
 ---
 
-### 3. Knowledge Base & Wiki (`note`)
+### 2. Knowledge Base & Wiki (`note`)
 
 ```bash
 # Create an architecture note with Wikilinks:
@@ -124,7 +146,7 @@ note show "Auth Architecture" --raw
 
 ---
 
-### 4. AI Agent Skill Manager (`skill`)
+### 3. AI Agent Skill Manager (`skill`)
 
 ```bash
 # List workspace skills:
