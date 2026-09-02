@@ -1,0 +1,15 @@
+# Rust build artifacts
+/target/
+**/*.rs.bk
+*.pdb
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Runtime logs
+*.log
+workspace/runs/logs/
+
+# Agent scratch
+.test_tracker/

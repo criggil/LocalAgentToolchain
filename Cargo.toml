@@ -1,0 +1,16 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/core",
+    "crates/task",
+    "crates/notes",
+    "crates/skill",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+authors = ["Evgeniy Shabanov"]
+license = "MIT"
+description = "Local Agent Toolchain (LAT) - Unix-philosophy developer & agent workstation in Rust"
+
