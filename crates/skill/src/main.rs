@@ -7,6 +7,7 @@ mod scanner;
 mod storage;
 mod adapters;
 mod formatters;
+mod builtin;
 
 use models::{AgentTarget, SkillScope};
 use scanner::AgentScanner;
@@ -105,6 +106,15 @@ enum Commands {
 
         #[arg(short, long, help = "Sync locally")]
         local: bool,
+    },
+
+    #[command(name = "export", about = "Export embedded built-in skills to workspace/skills/ folder")]
+    Export {
+        #[arg(help = "Name of built-in skill to export (e.g. task-manager)")]
+        name: Option<String>,
+
+        #[arg(long, help = "Export all built-in skills")]
+        all: bool,
     },
 }
 
@@ -269,6 +279,43 @@ fn main() {
             }
 
             println!("{} Synchronized {} skill bindings across detected agents.", "✓".green().bold(), total_deployed);
+        }
+
+        Commands::Export { name, all } => {
+            if all || name.is_none() {
+                match storage.export_all() {
+                    Ok(skills) => {
+                        println!(
+                            "{} Exported {} built-in skill(s) to {:?}",
+                            "✓".green().bold(),
+                            skills.len(),
+                            storage.skills_dir
+                        );
+                        for s in skills {
+                            println!("  • {} -> {:?}", s.manifest.name.bold(), s.dir_path);
+                        }
+                    }
+                    Err(e) => {
+                        eprintln!("{}: {}", "Error exporting skills".red().bold(), e);
+                        process::exit(1);
+                    }
+                }
+            } else if let Some(skill_name) = name {
+                match storage.export_skill(&skill_name) {
+                    Ok(s) => {
+                        println!(
+                            "{} Exported built-in skill '{}' to {:?}",
+                            "✓".green().bold(),
+                            s.manifest.name.bold(),
+                            s.dir_path
+                        );
+                    }
+                    Err(e) => {
+                        eprintln!("{}: {}", "Error exporting skill".red().bold(), e);
+                        process::exit(1);
+                    }
+                }
+            }
         }
     }
 }

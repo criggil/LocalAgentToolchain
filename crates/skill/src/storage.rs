@@ -1,6 +1,7 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 use tracker_core::WorkspaceContext;
+use crate::builtin;
 use crate::models::{SkillManifest, WorkspaceSkill};
 
 pub struct SkillStorage {
@@ -23,7 +24,9 @@ impl SkillStorage {
 
     pub fn list_skills(&self) -> Vec<WorkspaceSkill> {
         let mut skills = Vec::new();
+        let mut seen_names = std::collections::HashSet::new();
 
+        // 1. Read custom/overridden skills from disk
         if let Ok(entries) = fs::read_dir(&self.skills_dir) {
             for entry in entries.flatten() {
                 let path = entry.path();
@@ -31,9 +34,21 @@ impl SkillStorage {
                     let skill_file = path.join("SKILL.md");
                     if skill_file.is_file() {
                         if let Ok(skill) = Self::parse_skill_file(&path, &skill_file) {
+                            seen_names.insert(skill.manifest.name.clone());
                             skills.push(skill);
                         }
                     }
+                }
+            }
+        }
+
+        // 2. Add built-in embedded skills if not overridden on disk
+        for b in builtin::all_builtins() {
+            if !seen_names.contains(b.name) {
+                let virtual_dir = self.skills_dir.join(b.name);
+                let virtual_file = virtual_dir.join("SKILL.md");
+                if let Ok(skill) = Self::parse_skill_str(b.name, b.content, &virtual_dir, &virtual_file) {
+                    skills.push(skill);
                 }
             }
         }
@@ -63,7 +78,7 @@ impl SkillStorage {
             return Err(format!("Multiple skills matched '{}'. Please specify full name.", query));
         }
 
-        Err(format!("Skill '{}' not found in {:?}", query, self.skills_dir))
+        Err(format!("Skill '{}' not found in workspace or built-in registry.", query))
     }
 
     pub fn create_skill(&self, name: &str, description: Option<&str>) -> Result<WorkspaceSkill, String> {
@@ -92,15 +107,44 @@ impl SkillStorage {
         Self::parse_skill_file(&target_dir, &skill_file)
     }
 
+    pub fn export_skill(&self, name: &str) -> Result<WorkspaceSkill, String> {
+        let clean_name = name.trim().to_lowercase();
+        let builtin = builtin::find_builtin(&clean_name)
+            .ok_or_else(|| format!("Built-in skill '{}' not found. Available built-ins: {:?}", clean_name, builtin::all_builtins().iter().map(|b| b.name).collect::<Vec<_>>()))?;
+
+        let target_dir = self.skills_dir.join(builtin.name);
+        fs::create_dir_all(&target_dir)
+            .map_err(|e| format!("Failed to create skill directory {:?}: {}", target_dir, e))?;
+        fs::create_dir_all(target_dir.join("scripts")).ok();
+        fs::create_dir_all(target_dir.join("examples")).ok();
+
+        let skill_file = target_dir.join("SKILL.md");
+        fs::write(&skill_file, builtin.content)
+            .map_err(|e| format!("Failed to export SKILL.md: {}", e))?;
+
+        Self::parse_skill_file(&target_dir, &skill_file)
+    }
+
+    pub fn export_all(&self) -> Result<Vec<WorkspaceSkill>, String> {
+        let mut exported = Vec::new();
+        for b in builtin::all_builtins() {
+            exported.push(self.export_skill(b.name)?);
+        }
+        Ok(exported)
+    }
+
     fn parse_skill_file(dir_path: &Path, skill_file: &Path) -> Result<WorkspaceSkill, String> {
         let content = fs::read_to_string(skill_file)
             .map_err(|e| format!("Failed to read {:?}: {}", skill_file, e))?;
 
         let dir_name = dir_path.file_name().unwrap_or_default().to_string_lossy().to_string();
+        Self::parse_skill_str(&dir_name, &content, dir_path, skill_file)
+    }
 
+    fn parse_skill_str(fallback_name: &str, content: &str, dir_path: &Path, skill_file: &Path) -> Result<WorkspaceSkill, String> {
         if !content.starts_with("---") {
             let manifest = SkillManifest {
-                name: dir_name,
+                name: fallback_name.to_string(),
                 description: "Skill instructions".to_string(),
                 version: None,
                 author: None,
@@ -110,20 +154,20 @@ impl SkillStorage {
                 manifest,
                 dir_path: dir_path.to_path_buf(),
                 skill_file: skill_file.to_path_buf(),
-                body: content,
+                body: content.to_string(),
             });
         }
 
         let parts: Vec<&str> = content.splitn(3, "---").collect();
         if parts.len() < 3 {
-            return Err(format!("Malformed YAML frontmatter in {:?}", skill_file));
+            return Err(format!("Malformed YAML frontmatter in skill '{}'", fallback_name));
         }
 
         let yaml_str = parts[1];
         let body = parts[2].trim().to_string();
 
         let manifest: SkillManifest = serde_yaml::from_str(yaml_str)
-            .map_err(|e| format!("YAML parsing error in {:?}: {}", skill_file, e))?;
+            .map_err(|e| format!("YAML parsing error in skill '{}': {}", fallback_name, e))?;
 
         Ok(WorkspaceSkill {
             manifest,
