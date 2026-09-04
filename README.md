@@ -71,15 +71,16 @@ Traditional agent frameworks attempt this with heavy Python runtimes, bloated ve
 
 ## 📥 Installation
 
-### Method 1: Homebrew (macOS & Linux)
-Install directly via Homebrew:
+### Method 1: Homebrew (Recommended)
+Install directly via Homebrew from this repository:
 
 ```bash
 brew install criggil/LocalAgentToolchain/local-agent-toolchain
 ```
 
-To update to the latest release at any time:
+To check for updates and upgrade to the latest release:
 ```bash
+brew update
 brew upgrade local-agent-toolchain
 ```
 
