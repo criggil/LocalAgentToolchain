@@ -71,8 +71,22 @@ Traditional agent frameworks attempt this with heavy Python runtimes, bloated ve
 
 ## 📥 Installation
 
-### Method 1: One-Line Installer (macOS & Linux)
-Install or update the latest pre-compiled release (Apple Silicon M1/M2/M3/M4, Intel, or Linux):
+### Method 1: Homebrew (macOS & Linux)
+Install via the official Homebrew Tap:
+
+```bash
+brew install criggil/tap/local-agent-toolchain
+```
+
+To update to the latest release at any time:
+```bash
+brew upgrade local-agent-toolchain
+```
+
+---
+
+### Method 2: One-Line Installer (macOS & Linux)
+Install or update the latest pre-compiled release without Homebrew (Apple Silicon M1/M2/M3/M4, Intel, or Linux):
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/criggil/LocalAgentToolchain/main/install.sh | bash
@@ -87,7 +101,7 @@ export PATH="$HOME/.local/bin:$PATH"
 
 ---
 
-### Method 2: Build from Source
+### Method 3: Build from Source
 If you have the Rust toolchain installed:
 
 ```bash
