@@ -72,10 +72,10 @@ Traditional agent frameworks attempt this with heavy Python runtimes, bloated ve
 ## 📥 Installation
 
 ### Method 1: Homebrew (macOS & Linux)
-Install via the official Homebrew Tap:
+Install directly via Homebrew:
 
 ```bash
-brew install criggil/tap/local-agent-toolchain
+brew install criggil/LocalAgentToolchain/local-agent-toolchain
 ```
 
 To update to the latest release at any time:
