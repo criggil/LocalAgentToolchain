@@ -13,3 +13,8 @@ workspace/runs/logs/
 
 # Agent scratch
 .test_tracker/
+.claude/
+.codex/
+.junie/
+.pi/
+
